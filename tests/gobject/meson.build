@@ -13,14 +13,21 @@ gobject_tests = [
 # The marshal test requires running a binary, which means we cannot
 # build it when cross-compiling
 if not meson.is_cross_build() or meson.has_exe_wrapper()
-  gnome = import('gnome')
-
-  testmarshal_srcs = gnome.genmarshal('testmarshal',
-    sources : 'testmarshal.list',
-    prefix : 'test_marshal')
+  testmarshal_h = custom_target('testmarshal_h',
+    capture : true,
+    output : 'testmarshal.h',
+    input : 'testmarshal.list',
+    command : [glib_genmarshal, '--prefix', 'test_marshal', '--header', '@INPUT@'],
+  )
+  testmarshal_c = custom_target('testmarshal_c',
+    capture : true,
+    output : 'testmarshal.c',
+    input : 'testmarshal.list',
+    command : [glib_genmarshal, '--prefix', 'test_marshal', '--body', '@INPUT@'],
+  )
 
   gobject_tests += [
-    ['accumulator', ['accumulator.c', testmarshal_srcs]],
+    ['accumulator', ['accumulator.c', testmarshal_h, testmarshal_c]],
   ]
 endif
 
